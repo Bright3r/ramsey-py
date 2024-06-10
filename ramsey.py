@@ -1,56 +1,50 @@
 
 import itertools
+import argparse
 
 def main():
-    colors = ["red", "blue"]
-    color_subgraph_sizes = [3, 3]
-    graphSize = 4
+    # Create commandline argument parser
+    parser = argparse.ArgumentParser(description="Graph Ramsey CNF Generator.")
 
-    nVar = 5
-    with open("test.cnf", "w") as f:
-        f.write("p cnf " + str(nVar) + "TODO!!! " + str(len(colors)) + "\n")
-        
-        write_color_clauses(f, graphSize, colors)
-        
-        write_nonmonochromatic_clauses(f, graphSize, colors, color_subgraph_sizes)
+    parser.add_argument('fileName', type=str, help="The name of the file to write the cnf to")
+    parser.add_argument('graphSize', type=int, help="The number of vertices, N, in the simple connected graph G")
+    parser.add_argument('colors', type=int, nargs='+', help="The list of s, t, ... subgraphs")
 
-    print("Closed")
+    # Parse commandline arguments
+    args = parser.parse_args()
 
-# Hard coded test case from "Computation of new diagonal graph Ramsey numbers"
-# By Professor Richard M. Low
-def write_test(fileName):
-    graphSize = 4
-    red = 0
-    blue = 1
+    fileName = args.fileName
+    graphSize = args.graphSize
+    colors = args.colors
+
+    # Write CNF to file
     with open(fileName, "w") as f:
-        # Color Clauses
-        f.write(f"{edge2(1, 2, red, graphSize)} {edge2(1, 2, blue, graphSize)} 0\n")
-        f.write(f"-{edge2(1, 2, red, graphSize)} -{edge2(1, 2, blue, graphSize)} 0\n")
-        f.write(f"{edge2(1, 3, red, graphSize)} {edge2(1, 3, blue, graphSize)} 0\n")
-        f.write(f"-{edge2(1, 3, red, graphSize)} -{edge2(1, 3, blue, graphSize)} 0\n")
-        f.write(f"{edge2(1, 4, red, graphSize)} {edge2(1, 4, blue, graphSize)} 0\n")
-        f.write(f"-{edge2(1, 4, red, graphSize)} -{edge2(1, 4, blue, graphSize)} 0\n")
-        f.write(f"{edge2(2, 3, red, graphSize)} {edge2(2, 3, blue, graphSize)} 0\n")
-        f.write(f"-{edge2(2, 3, red, graphSize)} -{edge2(2, 3, blue, graphSize)} 0\n")
-        f.write(f"{edge2(2, 4, red, graphSize)} {edge2(2, 4, blue, graphSize)} 0\n")
-        f.write(f"-{edge2(2, 4, red, graphSize)} -{edge2(2, 4, blue, graphSize)} 0\n")
-        f.write(f"{edge2(3, 4, red, graphSize)} {edge2(3, 4, blue, graphSize)} 0\n")
-        f.write(f"-{edge2(3, 4, red, graphSize)} -{edge2(3, 4, blue, graphSize)} 0\n")
+        # Write an empty line as a placeholder for the DIMACS header
+        f.write("\n")
+        
+        # Write CNF Clauses to file
+        write_color_clauses(f, graphSize, colors)
+        write_nonmonochromatic_clauses(f, graphSize, colors)
 
-        # Non-monochromatic subgraph clauses
-        f.write(f"{edge2(1, 2, red, graphSize)} {edge2(1, 3, red, graphSize)} {edge2(2, 3, red, graphSize)} 0\n")
-        f.write(f"{edge2(1, 2, red, graphSize)} {edge2(1, 4, red, graphSize)} {edge2(2, 4, red, graphSize)} 0\n")
-        f.write(f"{edge2(1, 3, red, graphSize)} {edge2(1, 4, red, graphSize)} {edge2(3, 4, red, graphSize)} 0\n")
-        f.write(f"{edge2(2, 3, red, graphSize)} {edge2(2, 4, red, graphSize)} {edge2(3, 4, red, graphSize)} 0\n")
+    # Read the lines from file into a buffer
+    fileLines = []
+    with open(fileName, "r") as f:
+        fileLines = f.readlines()
 
-        f.write(f"{edge2(1, 2, blue, graphSize)} {edge2(1, 3, blue, graphSize)} {edge2(2, 3, blue, graphSize)} 0\n")
-        f.write(f"{edge2(1, 2, blue, graphSize)} {edge2(1, 4, blue, graphSize)} {edge2(2, 4, blue, graphSize)} 0\n")
-        f.write(f"{edge2(1, 3, blue, graphSize)} {edge2(1, 4, blue, graphSize)} {edge2(3, 4, blue, graphSize)} 0\n")
-        f.write(f"{edge2(2, 3, blue, graphSize)} {edge2(2, 4, blue, graphSize)} {edge2(3, 4, blue, graphSize)} 0\n")
+    # Reopen the file to write the DIMACS header at the top
+    with open(fileName, "w") as f:
+        # Get the number of vars from the largest-valued edge in the graph
+        numVars = edge(graphSize - 1, graphSize, len(colors) - 1, graphSize)
 
+        # Generate DIMACS header
+        dimacsHeader = f"p cnf {numVars} {len(fileLines) - 1} \n"
 
-def edge2(i, j, c, graphSize):
-    return str(edge(i, j, c, graphSize))
+        # Change first line of cnf to DIMACS header
+        fileLines[0] = dimacsHeader
+        f.writelines(fileLines)
+
+    print("Sucess!")
+
 
 # Write color clauses to cnf for each edge of graph
 def write_color_clauses(f, graphSize, colors):
@@ -68,11 +62,11 @@ def write_color_clauses(f, graphSize, colors):
             f.write(colorStr2 + "0\n")
 
 # Write noon-monochromatic subgraph clauses to cnf for each colored K_s
-def write_nonmonochromatic_clauses(f, graphSize, colors, color_subgraph_sizes):
+def write_nonmonochromatic_clauses(f, graphSize, colors):
     # Non-monochromatic subgraph clauses
     for c in range(len(colors)):
         # Get subgraph size s for the current color
-        subgraphSize = color_subgraph_sizes[c]
+        subgraphSize = colors[c]
 
         # Get all unique subsets of N choose S, where S = subgraph size
         combinations = generate_combinations(graphSize, subgraphSize)
@@ -90,7 +84,7 @@ def write_nonmonochromatic_clauses(f, graphSize, colors, color_subgraph_sizes):
 
 # Get the set of N Choose K combinations
 def generate_combinations(n, k):
-    # 0..N
+    # Get the list 1..N
     elements = list(range(1, n + 1))
 
     # Generate combinations
@@ -124,20 +118,43 @@ def edge(i, j, c, graphSize):
     
     # Add 1 to start indexing variables at 1
     return unique_index + 1
-    
 
-# # Get a unique variable (integer) corresponding to the given edge
-# def edge(i, j, c, graphSize):
-#     # Validate input
-#     if not (1 <= i < j <= graphSize):
-#         raise ValueError(f"Invalid value for i or j: ({i}, {j})")
-#
-#     # Calculate unique index based on combination formula
-#     # Triangle numbers formula: T(n) = n * (n + 1) / 2
-#     index = (graphSize * (graphSize - 1) // 2) * c  # Base index for colors
-#     index += (graphSize - i) * (graphSize - i - 1) // 2  # Increment based on i
-#     index += (j - i - 1)  # Increment based on j
-#     return index
+def edge2(i, j, c, graphSize):
+    return str(edge(i, j, c, graphSize))
+
+
+# Hard coded test case from "Computation of new diagonal graph Ramsey numbers"
+# By Professor Richard M. Low
+def write_test(fileName):
+    graphSize = 4
+    red = 0
+    blue = 1
+    with open(fileName, "w") as f:
+        # Color Clauses
+        f.write(f"{edge2(1, 2, red, graphSize)} {edge2(1, 2, blue, graphSize)} 0\n")
+        f.write(f"-{edge2(1, 2, red, graphSize)} -{edge2(1, 2, blue, graphSize)} 0\n")
+        f.write(f"{edge2(1, 3, red, graphSize)} {edge2(1, 3, blue, graphSize)} 0\n")
+        f.write(f"-{edge2(1, 3, red, graphSize)} -{edge2(1, 3, blue, graphSize)} 0\n")
+        f.write(f"{edge2(1, 4, red, graphSize)} {edge2(1, 4, blue, graphSize)} 0\n")
+        f.write(f"-{edge2(1, 4, red, graphSize)} -{edge2(1, 4, blue, graphSize)} 0\n")
+        f.write(f"{edge2(2, 3, red, graphSize)} {edge2(2, 3, blue, graphSize)} 0\n")
+        f.write(f"-{edge2(2, 3, red, graphSize)} -{edge2(2, 3, blue, graphSize)} 0\n")
+        f.write(f"{edge2(2, 4, red, graphSize)} {edge2(2, 4, blue, graphSize)} 0\n")
+        f.write(f"-{edge2(2, 4, red, graphSize)} -{edge2(2, 4, blue, graphSize)} 0\n")
+        f.write(f"{edge2(3, 4, red, graphSize)} {edge2(3, 4, blue, graphSize)} 0\n")
+        f.write(f"-{edge2(3, 4, red, graphSize)} -{edge2(3, 4, blue, graphSize)} 0\n")
+
+        # Non-monochromatic subgraph clauses
+        f.write(f"{edge2(1, 2, red, graphSize)} {edge2(1, 3, red, graphSize)} {edge2(2, 3, red, graphSize)} 0\n")
+        f.write(f"{edge2(1, 2, red, graphSize)} {edge2(1, 4, red, graphSize)} {edge2(2, 4, red, graphSize)} 0\n")
+        f.write(f"{edge2(1, 3, red, graphSize)} {edge2(1, 4, red, graphSize)} {edge2(3, 4, red, graphSize)} 0\n")
+        f.write(f"{edge2(2, 3, red, graphSize)} {edge2(2, 4, red, graphSize)} {edge2(3, 4, red, graphSize)} 0\n")
+
+        f.write(f"{edge2(1, 2, blue, graphSize)} {edge2(1, 3, blue, graphSize)} {edge2(2, 3, blue, graphSize)} 0\n")
+        f.write(f"{edge2(1, 2, blue, graphSize)} {edge2(1, 4, blue, graphSize)} {edge2(2, 4, blue, graphSize)} 0\n")
+        f.write(f"{edge2(1, 3, blue, graphSize)} {edge2(1, 4, blue, graphSize)} {edge2(3, 4, blue, graphSize)} 0\n")
+        f.write(f"{edge2(2, 3, blue, graphSize)} {edge2(2, 4, blue, graphSize)} {edge2(3, 4, blue, graphSize)} 0\n")
+
 
 
 if __name__ == "__main__":
