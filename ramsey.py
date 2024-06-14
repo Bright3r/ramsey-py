@@ -61,7 +61,7 @@ def write_color_clauses(f, graphSize, colors):
             f.write(colorStr1 + "0\n")
             f.write(colorStr2 + "0\n")
 
-# Write noon-monochromatic subgraph clauses to cnf for each colored K_s
+# Write non-monochromatic subgraph clauses to cnf for each colored K_s
 def write_nonmonochromatic_clauses(f, graphSize, colors):
     # Non-monochromatic subgraph clauses
     for c in range(len(colors)):
@@ -78,7 +78,7 @@ def write_nonmonochromatic_clauses(f, graphSize, colors):
             # Get each unique (i, j) from the combination
             for i in range(len(combination)):
                 for j in range(i + 1, len(combination)):
-                    colorStr += str(edge(combination[i], combination[j], c, graphSize)) + " "
+                    colorStr += "-" + str(edge(combination[i], combination[j], c, graphSize)) + " "
             f.write(colorStr + "0\n")
 
 
@@ -145,15 +145,15 @@ def write_test(fileName):
         f.write(f"-{edge2(3, 4, red, graphSize)} -{edge2(3, 4, blue, graphSize)} 0\n")
 
         # Non-monochromatic subgraph clauses
-        f.write(f"{edge2(1, 2, red, graphSize)} {edge2(1, 3, red, graphSize)} {edge2(2, 3, red, graphSize)} 0\n")
-        f.write(f"{edge2(1, 2, red, graphSize)} {edge2(1, 4, red, graphSize)} {edge2(2, 4, red, graphSize)} 0\n")
-        f.write(f"{edge2(1, 3, red, graphSize)} {edge2(1, 4, red, graphSize)} {edge2(3, 4, red, graphSize)} 0\n")
-        f.write(f"{edge2(2, 3, red, graphSize)} {edge2(2, 4, red, graphSize)} {edge2(3, 4, red, graphSize)} 0\n")
+        f.write(f"-{edge2(1, 2, red, graphSize)} -{edge2(1, 3, red, graphSize)} -{edge2(2, 3, red, graphSize)} 0\n")
+        f.write(f"-{edge2(1, 2, red, graphSize)} -{edge2(1, 4, red, graphSize)} -{edge2(2, 4, red, graphSize)} 0\n")
+        f.write(f"-{edge2(1, 3, red, graphSize)} -{edge2(1, 4, red, graphSize)} -{edge2(3, 4, red, graphSize)} 0\n")
+        f.write(f"-{edge2(2, 3, red, graphSize)} -{edge2(2, 4, red, graphSize)} -{edge2(3, 4, red, graphSize)} 0\n")
 
-        f.write(f"{edge2(1, 2, blue, graphSize)} {edge2(1, 3, blue, graphSize)} {edge2(2, 3, blue, graphSize)} 0\n")
-        f.write(f"{edge2(1, 2, blue, graphSize)} {edge2(1, 4, blue, graphSize)} {edge2(2, 4, blue, graphSize)} 0\n")
-        f.write(f"{edge2(1, 3, blue, graphSize)} {edge2(1, 4, blue, graphSize)} {edge2(3, 4, blue, graphSize)} 0\n")
-        f.write(f"{edge2(2, 3, blue, graphSize)} {edge2(2, 4, blue, graphSize)} {edge2(3, 4, blue, graphSize)} 0\n")
+        f.write(f"-{edge2(1, 2, blue, graphSize)} -{edge2(1, 3, blue, graphSize)} -{edge2(2, 3, blue, graphSize)} 0\n")
+        f.write(f"-{edge2(1, 2, blue, graphSize)} -{edge2(1, 4, blue, graphSize)} -{edge2(2, 4, blue, graphSize)} 0\n")
+        f.write(f"-{edge2(1, 3, blue, graphSize)} -{edge2(1, 4, blue, graphSize)} -{edge2(3, 4, blue, graphSize)} 0\n")
+        f.write(f"-{edge2(2, 3, blue, graphSize)} -{edge2(2, 4, blue, graphSize)} -{edge2(3, 4, blue, graphSize)} 0\n")
 
 
 
