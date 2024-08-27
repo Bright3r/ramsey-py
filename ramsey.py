@@ -1,4 +1,3 @@
-
 import itertools
 import argparse
 
@@ -48,18 +47,35 @@ def main():
 
 # Write color clauses to cnf for each edge of graph
 def write_color_clauses(f, graphSize, colors):
+    # Only support 2 or 3 colors
+    numColors = len(colors)
+    if not (numColors == 2 or numColors == 3):
+        raise ValueError(f"{len(colors)} number of colors not supported.\n")
+
+    # One hot encode the color of each edge
     # For (i, j) s.t. 1 <= i < j <= N
     for i in range(1, graphSize + 1):
         for j in range(i + 1, graphSize + 1):
-            colorStr1 = ""
-            colorStr2 = ""
-            for c in range(len(colors)):
-                # FIX XOR on 3 colors
-                colorStr1 += str(edge(i, j, c, graphSize)) + " "
-                colorStr2 += "-" + str(edge(i, j, c, graphSize)) + " "
+            if numColors == 2:
+                # Red(1, 2) || Blue(1, 2)
+                f.write(f"{edge(i, j, 0, graphSize)} {edge(i, j, 1, graphSize)} 0\n")
 
-            f.write(colorStr1 + "0\n")
-            f.write(colorStr2 + "0\n")
+                # !Red(1, 2) || !Blue(1, 2)
+                f.write(f"-{edge(i, j, 0, graphSize)} -{edge(i, j, 1, graphSize)} 0\n")
+
+            elif numColors == 3:
+                # Red(1, 2) || Blue(1, 2) || Yellow(1, 2)
+                f.write(f"{edge(i, j, 0, graphSize)} {edge(i, j, 1, graphSize)} {edge(i, j, 2, graphSize)} 0\n")
+
+                # !Red(1, 2) || !Blue(1, 2)
+                f.write(f"-{edge(i, j, 0, graphSize)} -{edge(i, j, 1, graphSize)} 0\n")
+
+                # !Red(1, 2) || !Yellow(1, 2)
+                f.write(f"-{edge(i, j, 0, graphSize)} -{edge(i, j, 2, graphSize)} 0\n")
+
+                # !Blue(1, 2) || !Yellow(1, 2)
+                f.write(f"-{edge(i, j, 1, graphSize)} -{edge(i, j, 2, graphSize)} 0\n")
+
 
 # Write non-monochromatic subgraph clauses to cnf for each colored K_s
 def write_nonmonochromatic_clauses(f, graphSize, colors):
@@ -119,12 +135,14 @@ def edge(i, j, c, graphSize):
     # Add 1 to start indexing variables at 1
     return unique_index + 1
 
+
+# Get result of edge function as a string
 def edge2(i, j, c, graphSize):
     return str(edge(i, j, c, graphSize))
 
 
 # Hard coded test case from "Computation of new diagonal graph Ramsey numbers"
-# By Professor Richard M. Low
+# Case created by Dr. Richard M. Low
 def write_test(fileName):
     graphSize = 4
     red = 0
